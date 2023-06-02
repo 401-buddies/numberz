@@ -1,6 +1,6 @@
 'use strict';
 
-let socket = require('../socket-client-for-tests-only');
+let socket = require('../../socket-client-for-tests-only');
 const { pickupOccurred, packageDelivered } = require('./handler');
 
 jest.mock('../socket-client-for-tests-only.js', () => {

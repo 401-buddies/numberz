@@ -1,89 +1,68 @@
 'use strict';
 
-
 require('dotenv').config();
+
+// Import required modules
 const { Server } = require('socket.io');
 const PORT = process.env.PORT || 3001;
 const Queue = require('./lib/queue');
-const capsQueue = new Queue();
+const playerQueue = new Queue();
 
-// socket server singleton
+// Create a socket server instance
 const server = new Server();
 
-// create a namespace
-const caps = server.of('/caps');
+// Create a namespace for the game
+const numberz = server.of('/numberz');
 
-// create / allow for connections to the caps namespace
-caps.on('connection', (socket) => {
-  // confirmation that a client is connected
-  console.log('connected to the caps namespace', socket.id);
+// Event listener for connections to the numberz namespace
+numberz.on('connection', (socket) => {
+  console.log('Connected to the numberz namespace', socket.id);
 
+  // Event listener for joining a room
   socket.on('join', (room) => {
     socket.join(room);
     console.log(`${socket.id} joined the ${room} room`);
   });
 
-  // any event emitted is read by onAny  
-  socket.onAny((event, payload) => {
-    let timestamp = new Date();
-    // will log everything as required by lab
-    console.log('EVENT: ', { event, timestamp, payload });
+  // Event listener for starting the game
+  socket.on('startGame', () => {
+    // Generate a random number for the game
+    const correctNumber = Math.floor(Math.random() * 100) + 1;
+
+    // Emit the gameStart event with the correctNumber to all players
+    numberz.emit('gameStart', { correctNumber });
   });
 
-  // listens for and relays pickup event
-  socket.on('pickup', (payload) => {
-    // DONE: for lab-13, need to queue "pickup" messaging to the driver
-    let driverQueue = capsQueue.read('driver');
-    if(!driverQueue){
-      let driverKey = capsQueue.store('driver', new Queue());
-      driverQueue = capsQueue.read(driverKey);
-    }
-    driverQueue.store(payload.messageId, payload);
-    // sends to all clients except sender...  other possibilities
-    socket.broadcast.emit('pickup', payload);
-  });
+  // Event listener for receiving guesses from players
+  socket.on('guess', (guess) => {
+    const playerId = socket.id;
 
-  // is this necessary since onAny is logging?  maybe good to have?
-  socket.on('in-transit', (payload) => {
-    socket.broadcast.emit('in-transit', payload);
-  });
+    // Store the guess in the playerQueue
+    playerQueue.store(playerId, guess);
 
-  socket.on('delivered', (payload) => {
-    // TODO: for lab-13, need to queue "delivered" messaging to the vendor
-    let vendorQueue = capsQueue.read(payload.queueId);
-    if(!vendorQueue){
-      let vendorKey = capsQueue.store(payload.queueId, new Queue());
-      vendorQueue = capsQueue.read(vendorKey);
-    }
-    vendorQueue.store(payload.messageId, payload);
+    // Emit guessReceived event to all players
+    numberz.emit('guessReceived', { playerId, guess });
 
-    socket.to(payload.queueId).emit('delivered', payload);
-  });
+    // Check if all players have made their guesses
+    if (playerQueue.size() === numberz.sockets.size) {
+      const results = playerQueue.getAll();
+      const correctNumber = numberz.sockets.get(playerQueue.peekKey()).correctNumber;
 
-  socket.on('getAll', (payload) => {
-    console.log('attempting to get all');
-    let currentQueue = capsQueue.read(payload.queueId);
-    // console.log(payload.queueId, capsQueue );
+      // Emit guessResults event with results and correctNumber to all players
+      numberz.emit('guessResults', { results, correctNumber });
 
-    if(currentQueue && currentQueue.data){
-      const ids = Object.keys(currentQueue.data);
-      // console.log(ids);
-      ids.forEach(messageId => {
-        let savedPayload = currentQueue.read(messageId);
-        socket.emit(savedPayload.event, savedPayload);
-      });
+      // Clear the playerQueue for the next round
+      playerQueue.clear();
     }
   });
 
-  socket.on('received', (payload) => {
-    let currentQueue = capsQueue.read(payload.queueId);
-    if(!currentQueue){
-      throw new Error('we have payloads, but no queue');
-    }
-    currentQueue.remove(payload.messageId);
+  // Event listener for disconnection
+  socket.on('disconnect', () => {
+    // Remove the player from the playerQueue
+    playerQueue.remove(socket.id);
   });
-
 });
 
-console.log('listening on PORT:', PORT);
+// Start the server and listen on the specified PORT
+console.log('Listening on PORT:', PORT);
 server.listen(PORT);
