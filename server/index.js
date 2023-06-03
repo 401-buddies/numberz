@@ -24,13 +24,14 @@ numberz.on('connection', (socket) => {
     console.log(`${socket.id} joined the ${room} room`);
   });
 
-  // Event listener for starting the game
-  socket.on('startGame', () => {
-    // Generate a random number for the game
-    const correctNumber = Math.floor(Math.random() * 100) + 1;
+  socket.on('gameStart', (payload) => {
+    const { answer } = payload;
 
-    // Emit the gameStart event with the correctNumber to all players
-    numberz.emit('gameStart', { correctNumber });
+    // Store the answer for later
+    socket.correctNumber = answer;
+
+    // Emit the 'gameStart' event to all players
+    numberz.emit('gameStart');
   });
 
   // Event listener for receiving guesses from players
@@ -40,15 +41,21 @@ numberz.on('connection', (socket) => {
     // Store the guess in the playerQueue
     playerQueue.store(playerId, guess);
 
-    // Emit guessReceived event to all players
+    // Emit 'guessReceived' event to all players
     numberz.emit('guessReceived', { playerId, guess });
 
-    // Check if all players have made their guesses
-    if (playerQueue.size() === numberz.sockets.size) {
-      const results = playerQueue.getAll();
-      const correctNumber = numberz.sockets.get(playerQueue.peekKey()).correctNumber;
+    console.log('Player Queue Size:', playerQueue.size());
+    console.log('Socket Size:', numberz.sockets.size - 1);
+  });
 
-      // Emit guessResults event with results and correctNumber to all players
+  // Event listener for receiving the guessReceived event
+  socket.on('guessReceived', () => {
+    // Check if all players have made their guesses
+    if (playerQueue.size() === numberz.sockets.size - 1) {
+      const results = playerQueue.getAll();
+      const correctNumber = socket.correctNumber;
+
+      // Emit 'guessResults' event with 'results' and 'correctNumber' to all players
       numberz.emit('guessResults', { results, correctNumber });
 
       // Clear the playerQueue for the next round
