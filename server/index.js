@@ -44,8 +44,8 @@ numberz.on('connection', (socket) => {
     // Emit 'guessReceived' event to all players
     numberz.emit('guessReceived', { playerId, guess });
 
-    console.log('Player Queue Size:', playerQueue.size());
-    console.log('Socket Size:', numberz.sockets.size - 1);
+    // console.log('Player Queue Size:', playerQueue.size());
+    // console.log('Socket Size:', numberz.sockets.size - 1);
   });
 
   // Event listener for receiving the guessReceived event
