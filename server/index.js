@@ -44,10 +44,11 @@ numberz.on('connection', (socket) => {
     // Emit 'guessReceived' event to all players
     numberz.emit('guessReceived', { playerId, guess });
 
-    console.log('Player Queue Size:', playerQueue.size());
-    console.log('Socket Size:', numberz.sockets.size - 1);
+    // console.log('Player Queue Size:', playerQueue.size());
+    // console.log('Socket Size:', numberz.sockets.size - 1);
   });
 
+  // TODO This isn't working, maybe this needs to be in the game controller side to receive and store players shit
   // Event listener for receiving the guessReceived event
   socket.on('guessReceived', () => {
     // Check if all players have made their guesses
