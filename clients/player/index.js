@@ -32,6 +32,8 @@ rl.question('Enter your guess (a number between 1 and 100): ', (guess) => {
 // setTimeout(() => {
   
 // }, 3000);
+// TODO We are hearing here but not on the server
+// TODO also if the player guesses before the game controller is up, it says you won
 socket.on('guessReceived', (payload) => {
   const { guess } = payload;
   console.log(`Player 1 has guessed ${guess}`);
