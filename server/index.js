@@ -36,15 +36,15 @@ numberz.on('connection', (socket) => {
 
   // Event listener for receiving guesses from players
   socket.on('guess', (payload) => {
-    const { guess, id } = payload;
+    const { id, guess } = payload;
 
     // Store the guess in the playerQueue
-    playerQueue.store(guess, id);
+    playerQueue.store(id, guess);
 
     // make player id's global and then if player1 do this or player2 do this
 
     // Emit 'guessReceived' event to all players
-    numberz.emit('guessReceived', { guess, id });
+    numberz.emit('guessReceived', { id, guess });
 
   });
 

@@ -13,7 +13,7 @@ socket.on('gameStart', () => {
 });
 
 socket.on('connect', () => {
-  console.log(id,' connected to the game server.');
+  console.log(id, ' connected to the game server.');
 });
 
 setTimeout(() => {
@@ -38,40 +38,37 @@ function guessInput() {
     rl.close();
   });
 }
-// socket.on('guessReceived', (payload) => {
-//   const { guess } = payload;
-//   console.log(`${id} has guessed ${guess.guess}`);
-// });
+
 
 // Event listener for guessResults event
 socket.on('guessResults', (payload) => {
   console.log('I am here', payload);
   const { results, correctNumber } = payload;
+  console.log('These are my results', results);
 
   // Iterate through the results and display messages based on the guesses
-  for (const playerId in results) {
-    console.log('I am inside for loop', payload);
-    const guess = results[playerId];
+  // Get the guess of Player 1
+  const player2Guess = results[id];
 
-    if (guess.guess < correctNumber) {
-      setTimeout(() => {
-        console.log(`${guess.id}: Guess higher!`);
-        guessInput();
-      }, 1000);
+  if (player2Guess < correctNumber) {
+    setTimeout(() => {
+      console.log('You guessed: ', player2Guess,'Guess higher!');
+      guessInput();
+    }, 1000);
 
-    } else if (guess.guess > correctNumber) {
-      setTimeout(() => {
-        console.log(`${guess.id}: Guess lower!`);
-        guessInput();
-      }, 1000);
-    } else {
-      console.log(`${guess.id}: Congratulations! You guessed the correct number!`);
-    }
+  } else if (player2Guess > correctNumber) {
+    setTimeout(() => {
+      console.log('You guessed: ', player2Guess,'Guess lower!');
+      guessInput();
+    }, 1000);
+  } else {
+    console.log('Congratulations! You guessed the correct number!');
   }
-
-  socket.on('disconnect', () => {
-    console.log(id, ' disconnected from the game server.');
-  });
 });
+
+socket.on('disconnect', () => {
+  console.log(id, ' disconnected from the game server.');
+});
+
 
 

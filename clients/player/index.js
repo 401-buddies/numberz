@@ -11,7 +11,7 @@ const id = 'Player 1';
 socket.on('gameStart', () => {
   console.log('Game has started! Guess a number between 1 and 100.');
 });
-                                                               
+
 socket.on('connect', () => {
   console.log(id, ' connected to the game server.');
 });
@@ -31,7 +31,7 @@ function guessInput() {
   rl.question('Enter your guess (a number between 1 and 100): ', (rawGuess) => {
     let guess = parseInt(rawGuess);
     // Send the guess to the server
-    socket.emit('guess', { guess, id });
+    socket.emit('guess', { id, guess });
 
     // Close the readline interface
     rl.close();
@@ -42,32 +42,34 @@ function guessInput() {
 socket.on('guessResults', (payload) => {
   console.log('I am here', payload);
   const { results, correctNumber } = payload;
-  
+  console.log('These are my results', results);
+
   // Iterate through the results and display messages based on the guesses
-  for (const id in results) {
-    const guess = results[id];
-    console.log('Im a guess', guess, 'I am guess.id', results.id, 'I am guess.guess', results.guess);
-    console.log('I am inside for loop', payload);
+  // Get the guess of Player 1
+  const player1Guess = results['Player 1'];
 
-    if (guess.id < correctNumber) {
-      setTimeout(() => {
-        console.log(`${guess.id}: Guess higher!`);
-        guessInput();
-      }, 1000);
 
-    } else if (guess.id > correctNumber) {
-      setTimeout(() => {
-        console.log(`${guess.id}: Guess lower!`);
-        guessInput();
-      }, 1000);
-    } else {
-      console.log(`${guess.id}: Congratulations! You guessed the correct number!`);
-    }
+  if (player1Guess < correctNumber) {
+    setTimeout(() => {
+      console.log('You guessed: ', player1Guess,'Guess higher!');
+      guessInput();
+      // TODO Function for check for winner that looks for a winner in the server.
+    }, 1000);
+
+  } else if (player1Guess > correctNumber) {
+    setTimeout(() => {
+      console.log('You guessed: ', player1Guess,'Guess lower!');
+      guessInput();
+    }, 1000);
+  } else {
+    console.log('Congratulations! You guessed the correct number!');
+    socket.emit('winner');
   }
-
-  socket.on('disconnect', () => {
-    console.log(id, ' disconnected from the game server.');
-  });
 });
+
+socket.on('disconnect', () => {
+  console.log(id, ' disconnected from the game server.');
+});
+
 
 
