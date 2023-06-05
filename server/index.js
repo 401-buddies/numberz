@@ -41,8 +41,6 @@ numberz.on('connection', (socket) => {
     // Store the guess in the playerQueue
     playerQueue.store(id, guess);
 
-    // make player id's global and then if player1 do this or player2 do this
-
     // Emit 'guessReceived' event to all players
     numberz.emit('guessReceived', { id, guess });
 
@@ -51,23 +49,27 @@ numberz.on('connection', (socket) => {
   // TODO This isn't working, maybe this needs to be in the game controller side to receive and store players shit
   // Event listener for receiving the guessReceived event
   socket.on('guessChecker', (payload) => {
-    // console.log('Server Payload: ', payload);
-    // console.log('PlayerQueue Size', playerQueue.size(), ': Socket numbers size', numberz.sockets.size);
     // Check if all players have made their guesses
 
-    console.log('PlayerQueue Data', playerQueue.data);
     if (playerQueue.size() === numberz.sockets.size - 2) {
       const results = playerQueue.getAll();
       const correctNumber = numberz.correctNumber;
 
       // Emit 'guessResults' event with 'results' and 'correctNumber' to all players
-      // console.log('Server Results ', results, 'Correct Number', correctNumber);
-      // console.log('I am here', payload);
       numberz.emit('guessResults', { results, correctNumber });
 
       // Clear the playerQueue for the next round
       playerQueue.clear();
     }
+  });
+
+  // Event listener for winner event
+  socket.on('winner', (payload) => {
+    const { winner } = payload;
+    numberz.emit('winner', { winner });
+
+    // Emit 'disableGuessing' event to all players
+    numberz.emit('disableGuessing', { winner });
   });
 
   // Event listener for disconnection

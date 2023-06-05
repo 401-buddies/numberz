@@ -13,62 +13,78 @@ socket.on('gameStart', () => {
 });
 
 socket.on('connect', () => {
-  console.log(id, ' connected to the game server.');
+  console.log(id, 'connected to the game server.');
 });
 
 setTimeout(() => {
   guessInput();
 }, 2000);
 
+// Variable to keep track of guess input status
+let guessEnabled = true;
 
 function guessInput() {
+  if (!guessEnabled) {
+    console.log('Guessing is disabled. Wait for the next round.');
+    return;
+  }
+
   // Create a readline interface for reading user input from the console
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
+
   // Prompt the player to enter a guess
   rl.question('Enter your guess (a number between 1 and 100): ', (rawGuess) => {
     let guess = parseInt(rawGuess);
     // Send the guess to the server
-    socket.emit('guess', { guess, id });
-
+    socket.emit('guess', { id, guess });
 
     // Close the readline interface
     rl.close();
   });
 }
 
-
 // Event listener for guessResults event
 socket.on('guessResults', (payload) => {
-  console.log('I am here', payload);
+
+  // Check if the guess input should be disabled
+  if (payload.winner) {
+    guessEnabled = false;
+  }
+
   const { results, correctNumber } = payload;
-  console.log('These are my results', results);
 
   // Iterate through the results and display messages based on the guesses
-  // Get the guess of Player 1
-  const player2Guess = results[id];
+  // Get the guess of Player 2
+  const player2Guess = results['Player 2'];
 
-  if (player2Guess < correctNumber) {
+  if (player2Guess < correctNumber && guessEnabled === true) {
     setTimeout(() => {
-      console.log('You guessed: ', player2Guess,'Guess higher!');
+      console.log('You guessed: ', player2Guess, 'Guess higher!');
       guessInput();
     }, 1000);
-
   } else if (player2Guess > correctNumber) {
     setTimeout(() => {
-      console.log('You guessed: ', player2Guess,'Guess lower!');
+      console.log('You guessed: ', player2Guess, 'Guess lower!');
       guessInput();
     }, 1000);
   } else {
     console.log('Congratulations! You guessed the correct number!');
+    socket.emit('winner', { winner: id }); // Emit 'winner' event with the winner's ID
   }
 });
 
-socket.on('disconnect', () => {
-  console.log(id, ' disconnected from the game server.');
+socket.on('disableGuessing', (payload) => {
+  console.log(`We have a winner! ${payload.winner}`);
+  guessEnabled = false;
 });
 
+socket.on('enableGuessing', () => {
+  guessEnabled = true;
+});
 
-
+socket.on('disconnect', () => {
+  console.log(id, 'disconnected from the game server.');
+});
