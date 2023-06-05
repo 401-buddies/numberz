@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 const PORT = process.env.PORT || 3001;
 const Queue = require('./lib/queue');
 const playerQueue = new Queue();
+let answer;
 
 // Create a socket server instance
 const server = new Server();
@@ -25,18 +26,18 @@ numberz.on('connection', (socket) => {
   });
 
   socket.on('gameStart', (payload) => {
-    const { answer } = payload;
-
+    let answer = payload;
+  
     // Store the answer for later
-    socket.correctNumber = answer;
-
+    numberz.correctNumber = answer;
+ 
     // Emit the 'gameStart' event to all players
     numberz.emit('gameStart');
   });
 
   // Event listener for receiving guesses from players
-  socket.on('guess', (guess) => {
-    const playerId = socket.id;
+  socket.on('guess', (guess, id) => {
+    const playerId = id;
 
     // Store the guess in the playerQueue
     playerQueue.store(playerId, guess);
@@ -50,13 +51,16 @@ numberz.on('connection', (socket) => {
 
   // TODO This isn't working, maybe this needs to be in the game controller side to receive and store players shit
   // Event listener for receiving the guessReceived event
-  socket.on('guessReceived', () => {
+  socket.on('guessChecker', (payload) => {
+    // console.log('Server Payload: ', payload);
+    
     // Check if all players have made their guesses
-    if (playerQueue.size() === numberz.sockets.size - 1) {
+    if (playerQueue.size() === numberz.sockets.size - 2) {
       const results = playerQueue.getAll();
-      const correctNumber = socket.correctNumber;
+      const correctNumber = numberz.correctNumber;
 
       // Emit 'guessResults' event with 'results' and 'correctNumber' to all players
+      // console.log('Server Results ', results,'Correct Number', correctNumber);
       numberz.emit('guessResults', { results, correctNumber });
 
       // Clear the playerQueue for the next round

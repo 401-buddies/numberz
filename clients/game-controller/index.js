@@ -18,6 +18,11 @@ socket.on('connect', () => {
   startGame();
 });
 
+socket.on('guessReceived', (payload) =>{
+  console.log('Guess received: ', payload.guess.id, ' guessed ', payload.guess.guess);
+  socket.emit('guessChecker', payload);
+});
+
 // Event listener for disconnection from the game server
 socket.on('disconnect', () => {
   console.log('Game controller disconnected from the game server.');

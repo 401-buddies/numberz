@@ -5,6 +5,7 @@ const readline = require('readline');
 
 // Connect to the game server
 const socket = io('http://localhost:3001/numberz');
+const id = 'Player 1';
 
 // Event listener for gameStart event
 socket.on('gameStart', () => {
@@ -12,31 +13,37 @@ socket.on('gameStart', () => {
 });
 
 console.log('Player 1 connected to the game server.');
+setTimeout(() => {
+  guessInput();
+}, 2000);
 
-// Create a readline interface for reading user input from the console
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
 
-// Prompt the player to enter a guess
-rl.question('Enter your guess (a number between 1 and 100): ', (guess) => {
-  // Send the guess to the server
-  socket.emit('guess', parseInt(guess));
+function guessInput() {
+  // Create a readline interface for reading user input from the console
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  // Prompt the player to enter a guess
+  rl.question('Enter your guess (a number between 1 and 100): ', (rawGuess) => {
+    let guess = parseInt(rawGuess);
+    // Send the guess to the server
+    socket.emit('guess', { guess, id });
 
-  // Close the readline interface
-  rl.close();
-});
+    // Close the readline interface
+    rl.close();
+  });
+}
 
 // Event listener for guessReceived event
 // setTimeout(() => {
-  
+
 // }, 3000);
 // TODO We are hearing here but not on the server
 // TODO also if the player guesses before the game controller is up, it says you won
 socket.on('guessReceived', (payload) => {
   const { guess } = payload;
-  console.log(`Player 1 has guessed ${guess}`);
+  console.log(`Player 1 has guessed ${guess.guess}`);
 });
 
 // Event listener for guessResults event
@@ -47,14 +54,25 @@ socket.on('guessResults', (payload) => {
   for (const playerId in results) {
     const guess = results[playerId];
 
-    if (guess < correctNumber) {
-      console.log(`Player ${playerId}: Guess higher!`);
-    } else if (guess > correctNumber) {
-      console.log(`Player ${playerId}: Guess lower!`);
+    if (guess.guess < correctNumber) {
+      setTimeout(() => {
+        console.log(`Player ${guess.id}: Guess higher!`);
+        guessInput();
+      }, 1000);
+
+    } else if (guess.guess > correctNumber) {
+      setTimeout(() => {
+        console.log(`Player ${guess.id}: Guess lower!`);
+        guessInput();
+      }, 1000);
     } else {
-      console.log(`Player ${playerId}: Congratulations! You guessed the correct number!`);
+      console.log(`Player ${guess.id}: Congratulations! You guessed the correct number!`);
     }
   }
+
+  socket.on('disconnect', () => {
+    console.log(id, ' disconnected from the game server.');
+  });
 });
 
 
