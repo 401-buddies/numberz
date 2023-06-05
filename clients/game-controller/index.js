@@ -19,7 +19,7 @@ socket.on('connect', () => {
 });
 
 socket.on('guessReceived', (payload) =>{
-  console.log('Guess received: ', payload.guess.id, ' guessed ', payload.guess.guess);
+  console.log('Guess received: ', payload.id, ' guessed ', payload.guess);
   socket.emit('guessChecker', payload);
 });
 

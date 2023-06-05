@@ -5,15 +5,15 @@ const readline = require('readline');
 
 // Connect to the game server
 const socket = io('http://localhost:3001/numberz');
-const id = 'Player 1';
+const id = 'Player 2';
 
 // Event listener for gameStart event
 socket.on('gameStart', () => {
   console.log('Game has started! Guess a number between 1 and 100.');
 });
-                                                               
+
 socket.on('connect', () => {
-  console.log(id, ' connected to the game server.');
+  console.log(id,' connected to the game server.');
 });
 
 setTimeout(() => {
@@ -33,29 +33,33 @@ function guessInput() {
     // Send the guess to the server
     socket.emit('guess', { guess, id });
 
+
     // Close the readline interface
     rl.close();
   });
 }
+// socket.on('guessReceived', (payload) => {
+//   const { guess } = payload;
+//   console.log(`${id} has guessed ${guess.guess}`);
+// });
 
 // Event listener for guessResults event
 socket.on('guessResults', (payload) => {
   console.log('I am here', payload);
   const { results, correctNumber } = payload;
-  
-  // Iterate through the results and display messages based on the guesses
-  for (const id in results) {
-    const guess = results[id];
-    console.log('Im a guess', guess, 'I am guess.id', results.id, 'I am guess.guess', results.guess);
-    console.log('I am inside for loop', payload);
 
-    if (guess.id < correctNumber) {
+  // Iterate through the results and display messages based on the guesses
+  for (const playerId in results) {
+    console.log('I am inside for loop', payload);
+    const guess = results[playerId];
+
+    if (guess.guess < correctNumber) {
       setTimeout(() => {
         console.log(`${guess.id}: Guess higher!`);
         guessInput();
       }, 1000);
 
-    } else if (guess.id > correctNumber) {
+    } else if (guess.guess > correctNumber) {
       setTimeout(() => {
         console.log(`${guess.id}: Guess lower!`);
         guessInput();
