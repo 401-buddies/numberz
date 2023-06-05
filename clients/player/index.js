@@ -7,21 +7,24 @@ const readline = require('readline');
 const socket = io('http://localhost:3001/numberz');
 const id = 'Player 1';
 
+// Variable to keep track of guess input status
+let guessEnabled = true;
+
 // Event listener for gameStart event
 socket.on('gameStart', () => {
   console.log('Game has started! Guess a number between 1 and 100.');
+  let guessEnabled = true;
+  guessInput(guessEnabled); // Start the first round
+  return guessEnabled;
 });
 
 socket.on('connect', () => {
-  console.log(id, ' connected to the game server.');
+  console.log(id, 'connected to the game server.');
+  console.log('Game has started! Guess a number between 1 and 100.');
+  setTimeout(() => {
+    guessInput();
+  }, 2000);
 });
-
-setTimeout(() => {
-  guessInput();
-}, 2000);
-
-// Variable to keep track of guess input status
-let guessEnabled = true;
 
 function guessInput() {
   if (!guessEnabled) {
@@ -48,19 +51,17 @@ function guessInput() {
 
 // Event listener for guessResults event
 socket.on('guessResults', (payload) => {
+  const { results, correctNumber } = payload;
 
   // Check if the guess input should be disabled
   if (payload.winner) {
     guessEnabled = false;
   }
 
-  const { results, correctNumber } = payload;
-
-  // Iterate through the results and display messages based on the guesses
   // Get the guess of Player 1
   const player1Guess = results['Player 1'];
 
-  if (player1Guess < correctNumber && guessEnabled === true) {
+  if (player1Guess < correctNumber && guessEnabled) {
     setTimeout(() => {
       console.log('You guessed: ', player1Guess, 'Guess higher!');
       guessInput();
@@ -84,7 +85,6 @@ socket.on('disableGuessing', (payload) => {
 socket.on('enableGuessing', () => {
   guessEnabled = true;
 });
-
 
 socket.on('disconnect', () => {
   console.log(id, ' disconnected from the game server.');

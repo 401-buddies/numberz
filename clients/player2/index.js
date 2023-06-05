@@ -7,21 +7,22 @@ const readline = require('readline');
 const socket = io('http://localhost:3001/numberz');
 const id = 'Player 2';
 
+// Variable to keep track of guess input status
+let guessEnabled = true;
+
 // Event listener for gameStart event
 socket.on('gameStart', () => {
-  console.log('Game has started! Guess a number between 1 and 100.');
+  console.log('Game has started! Guess a number between 1 and 100. Gamestart');
+  guessInput(); // Start the first round
 });
 
 socket.on('connect', () => {
   console.log(id, 'connected to the game server.');
+  console.log('Game has started! Guess a number between 1 and 100.');
+  setTimeout(() => {
+    guessInput();
+  }, 2000);
 });
-
-setTimeout(() => {
-  guessInput();
-}, 2000);
-
-// Variable to keep track of guess input status
-let guessEnabled = true;
 
 function guessInput() {
   if (!guessEnabled) {
