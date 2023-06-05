@@ -12,9 +12,11 @@ let guessEnabled = true;
 
 // Event listener for gameStart event
 socket.on('gameStart', () => {
+  // TODO This doesn't start the next game correctly. it's still reading false
   console.log('Game has started! Guess a number between 1 and 100.');
   let guessEnabled = true;
-  guessInput(guessEnabled); // Start the first round
+  // TODO maybe feed guessEnabled in here
+  guessInput(); // Start the first round
   return guessEnabled;
 });
 
