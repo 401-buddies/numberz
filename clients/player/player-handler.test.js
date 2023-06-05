@@ -1,5 +1,5 @@
 'use strict';
-
+//TODO: Write test suite
 let socket = require('../../socket-client-for-tests-only');
 const { pickupOccurred, packageDelivered } = require('./handler');
 
