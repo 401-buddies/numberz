@@ -25,36 +25,35 @@ numberz.on('connection', (socket) => {
   });
 
   socket.on('gameStart', (payload) => {
-    const { answer } = payload;
+    let answer = payload;
 
     // Store the answer for later
-    socket.correctNumber = answer;
+    numberz.correctNumber = answer;
 
     // Emit the 'gameStart' event to all players
     numberz.emit('gameStart');
   });
 
   // Event listener for receiving guesses from players
-  socket.on('guess', (guess) => {
-    const playerId = socket.id;
+  socket.on('guess', (payload) => {
+    const { id, guess } = payload;
 
     // Store the guess in the playerQueue
-    playerQueue.store(playerId, guess);
+    playerQueue.store(id, guess);
 
     // Emit 'guessReceived' event to all players
-    numberz.emit('guessReceived', { playerId, guess });
+    numberz.emit('guessReceived', { id, guess });
 
-    // console.log('Player Queue Size:', playerQueue.size());
-    // console.log('Socket Size:', numberz.sockets.size - 1);
   });
 
   // TODO This isn't working, maybe this needs to be in the game controller side to receive and store players shit
   // Event listener for receiving the guessReceived event
-  socket.on('guessReceived', () => {
+  socket.on('guessChecker', (payload) => {
     // Check if all players have made their guesses
-    if (playerQueue.size() === numberz.sockets.size - 1) {
+
+    if (playerQueue.size() === numberz.sockets.size - 2) {
       const results = playerQueue.getAll();
-      const correctNumber = socket.correctNumber;
+      const correctNumber = numberz.correctNumber;
 
       // Emit 'guessResults' event with 'results' and 'correctNumber' to all players
       numberz.emit('guessResults', { results, correctNumber });
@@ -62,6 +61,15 @@ numberz.on('connection', (socket) => {
       // Clear the playerQueue for the next round
       playerQueue.clear();
     }
+  });
+
+  // Event listener for winner event
+  socket.on('winner', (payload) => {
+    const { winner } = payload;
+    numberz.emit('winner', { winner });
+
+    // Emit 'disableGuessing' event to all players
+    numberz.emit('disableGuessing', { winner });
   });
 
   // Event listener for disconnection

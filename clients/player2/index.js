@@ -5,19 +5,15 @@ const readline = require('readline');
 
 // Connect to the game server
 const socket = io('http://localhost:3001/numberz');
-const id = 'Player 1';
+const id = 'Player 2';
 
 // Variable to keep track of guess input status
 let guessEnabled = true;
 
 // Event listener for gameStart event
 socket.on('gameStart', () => {
-  // TODO This doesn't start the next game correctly. it's still reading false
-  console.log('Game has started! Guess a number between 1 and 100.');
-  let guessEnabled = true;
-  // TODO maybe feed guessEnabled in here
+  console.log('Game has started! Guess a number between 1 and 100. Gamestart');
   guessInput(); // Start the first round
-  return guessEnabled;
 });
 
 socket.on('connect', () => {
@@ -53,24 +49,26 @@ function guessInput() {
 
 // Event listener for guessResults event
 socket.on('guessResults', (payload) => {
-  const { results, correctNumber } = payload;
 
   // Check if the guess input should be disabled
   if (payload.winner) {
     guessEnabled = false;
   }
 
-  // Get the guess of Player 1
-  const player1Guess = results['Player 1'];
+  const { results, correctNumber } = payload;
 
-  if (player1Guess < correctNumber && guessEnabled) {
+  // Iterate through the results and display messages based on the guesses
+  // Get the guess of Player 2
+  const player2Guess = results['Player 2'];
+
+  if (player2Guess < correctNumber && guessEnabled === true) {
     setTimeout(() => {
-      console.log('You guessed: ', player1Guess, 'Guess higher!');
+      console.log('You guessed: ', player2Guess, 'Guess higher!');
       guessInput();
     }, 1000);
-  } else if (player1Guess > correctNumber) {
+  } else if (player2Guess > correctNumber) {
     setTimeout(() => {
-      console.log('You guessed: ', player1Guess, 'Guess lower!');
+      console.log('You guessed: ', player2Guess, 'Guess lower!');
       guessInput();
     }, 1000);
   } else {
@@ -89,5 +87,5 @@ socket.on('enableGuessing', () => {
 });
 
 socket.on('disconnect', () => {
-  console.log(id, ' disconnected from the game server.');
+  console.log(id, 'disconnected from the game server.');
 });
